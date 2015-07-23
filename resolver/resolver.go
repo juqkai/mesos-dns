@@ -24,6 +24,7 @@ import (
 	"github.com/mesosphere/mesos-dns/records"
 	"github.com/mesosphere/mesos-dns/util"
 	"github.com/miekg/dns"
+	"io/ioutil"
 )
 
 var (
@@ -493,6 +494,7 @@ func (res *Resolver) configureHTTP() {
 	ws.Route(ws.GET("/v1/hosts/{host}").To(res.RestHost))
 	ws.Route(ws.GET("/v1/hosts/{host}/ports").To(res.RestPorts))
 	ws.Route(ws.GET("/v1/services/{service}").To(res.RestService))
+	ws.Route(ws.GET("/v1/marathon/event_callback").To(res.Callback))
 	restful.Add(ws)
 }
 
@@ -537,6 +539,26 @@ func (res *Resolver) RestVersion(req *restful.Request, resp *restful.Response) {
 		logging.Error.Println(err)
 	}
 	io.WriteString(resp, string(output))
+}
+
+type MarathonEvent struct {
+	// EventType can be
+	// api_post_event, status_update_event, subscribe_event
+	EventType string
+	Timestamp string
+}
+// Reports Mesos-DNS version through REST interface
+func (res *Resolver) Callback(req *restful.Request, resp *restful.Response) {
+	var event MarathonEvent
+
+	payload, _ := ioutil.ReadAll(req.Request.Body)
+	err := json.Unmarshal(payload, &event)
+
+	if err != nil {
+		logging.Verbose.Println("Unable to decode JSON Marathon Event request: %s \n", string(payload))
+	}
+	res.Reload()
+	io.WriteString(resp.ResponseWriter, "Got it!")
 }
 
 // Reports Mesos-DNS version through http interface
