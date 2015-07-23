@@ -10,6 +10,7 @@ Mesos-DNS implements a simple REST API for service discovery over HTTP:
 * `GET /v1/config`: lists the Mesos-DNS configuration info
 * `GET /v1/hosts/{host}`: lists the IP address of a host
 * `GET /v1/services/{service}`: lists the host, IP address, and port for a service
+* `GET /v1/marathon/event_callback`: marathon event callback
 
 ## `GET /v1/version`
 
